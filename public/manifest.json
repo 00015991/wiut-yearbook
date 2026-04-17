@@ -1,0 +1,43 @@
+{
+  "name": "WIUT Graduation Yearbook",
+  "short_name": "WIUT Yearbook",
+  "description": "A private digital yearbook for WIUT graduating classes — preserving every story, every friendship, every moment.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5efe6",
+  "theme_color": "#6b1f2a",
+  "orientation": "portrait-primary",
+  "categories": ["education", "social", "photo"],
+  "lang": "en",
+  "dir": "ltr",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "My Profile",
+      "short_name": "Profile",
+      "description": "Edit your yearbook profile",
+      "url": "/dashboard/profile"
+    },
+    {
+      "name": "Upload Photos",
+      "short_name": "Photos",
+      "description": "Upload your yearbook photos",
+      "url": "/dashboard/photos"
+    },
+    {
+      "name": "Messages",
+      "short_name": "Messages",
+      "description": "View yearbook signing messages",
+      "url": "/dashboard/messages"
+    }
+  ],
+  "prefer_related_applications": false
+}
