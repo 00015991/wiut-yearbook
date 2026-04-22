@@ -43,6 +43,7 @@ export function SignedImage({
       {blurPlaceholder && !loaded && (
         <div className="absolute inset-0 bg-beige-dark animate-pulse-soft" />
       )}
+      {/* eslint-disable-next-line @next/next/no-img-element -- Supabase signed URL */}
       <img
         src={src}
         alt={alt}

@@ -1,8 +1,7 @@
 import { redirect } from 'next/navigation';
 import { requireRole } from '@/lib/auth';
 import { getStudentDashboard } from '@/lib/queries';
-import { createClient } from '@/lib/supabase/server';
-import { BUCKET_NAME } from '@/lib/storage';
+import { signStoragePath } from '@/lib/storage/signed-url';
 import { SectionHeading } from '@/components/shared/page-shell';
 import { PHOTO_LIMITS } from '@/types';
 import { PhotoSection } from './photo-section';
@@ -14,16 +13,12 @@ export default async function StudentPhotosPage() {
   const { student, photos } = await getStudentDashboard(user.studentId);
   if (!student) redirect('/login');
 
-  const supabase = await createClient();
-
   // Get signed URLs for existing photos
   const photosWithUrls = await Promise.all(
-    photos.map(async (photo) => {
-      const { data } = await supabase.storage
-        .from(BUCKET_NAME)
-        .createSignedUrl(photo.storage_thumb_path, 3600);
-      return { ...photo, thumbUrl: data?.signedUrl || '' };
-    })
+    photos.map(async (photo) => ({
+      ...photo,
+      thumbUrl: (await signStoragePath(photo.storage_thumb_path)) ?? '',
+    }))
   );
 
   const categories = [
@@ -47,9 +42,9 @@ export default async function StudentPhotosPage() {
     },
     {
       key: 'childhood' as const,
-      title: 'Childhood Photo',
-      description: 'A photo from when you were young for the Then & Now section.',
-      hint: 'This creates a fun comparison with your current portrait.',
+      title: 'Childhood photo',
+      description: 'A photo of your younger self for the class Childhood gallery.',
+      hint: 'It appears on your profile and in the shared Childhood page.',
     },
   ];
 

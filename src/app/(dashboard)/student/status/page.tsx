@@ -6,7 +6,6 @@ import { SectionHeading } from '@/components/shared/page-shell';
 import { Card, CardTitle } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
 import { SubmitButton } from './submit-button';
 import { CheckCircle, Clock, AlertCircle, Camera, FileText, Lock } from 'lucide-react';
 

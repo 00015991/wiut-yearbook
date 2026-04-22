@@ -12,23 +12,27 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
 }
 
+// Restrained variant palette — primary is burgundy, secondary is night-ink,
+// outline is a hairline border, ghost is chromeless for inline actions,
+// danger is the red error for destructive moves. No gradients, no gloss.
 const variantStyles: Record<Variant, string> = {
   primary:
-    'bg-burgundy text-white hover:bg-burgundy-light active:bg-burgundy-dark shadow-sm',
+    'bg-burgundy text-white shadow-paper-sm hover:bg-burgundy-light active:bg-burgundy-dark',
   secondary:
-    'bg-night text-white hover:bg-night-light active:bg-night',
+    'bg-night text-white shadow-paper-sm hover:bg-night-light active:bg-night',
   outline:
-    'border-2 border-soft-border text-night hover:bg-beige active:bg-beige-dark',
+    'border border-soft-border text-night bg-white hover:bg-beige hover:border-warm-gray/40 active:bg-beige-dark',
   ghost:
     'text-night hover:bg-beige active:bg-beige-dark',
   danger:
-    'bg-error text-white hover:opacity-90 active:opacity-80',
+    'bg-error text-white shadow-paper-sm hover:opacity-90 active:opacity-85',
 };
 
+// Editorial radius scale — modest rounding, never pill-shaped.
 const sizeStyles: Record<Size, string> = {
-  sm: 'px-3 py-1.5 text-sm rounded-lg',
-  md: 'px-5 py-2.5 text-sm rounded-xl',
-  lg: 'px-8 py-3.5 text-base rounded-xl',
+  sm: 'px-3 py-1.5 text-[13px] rounded-md gap-1.5',
+  md: 'px-4 py-2 text-sm rounded-lg gap-2',
+  lg: 'px-6 py-3 text-[15px] rounded-lg gap-2',
 };
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -37,8 +41,10 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          'inline-flex items-center justify-center font-medium transition-all duration-200 ease-out',
-          'disabled:opacity-50 disabled:cursor-not-allowed',
+          'inline-flex items-center justify-center font-medium tracking-tight',
+          'transition-[background-color,color,opacity,box-shadow,transform] duration-200 ease-out',
+          'active:scale-[0.98] select-none',
+          'disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100',
           variantStyles[variant],
           sizeStyles[size],
           className
@@ -48,9 +54,10 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {loading && (
           <svg
-            className="animate-spin -ml-1 mr-2 h-4 w-4"
+            className="animate-spin -ml-0.5 h-4 w-4"
             fill="none"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path

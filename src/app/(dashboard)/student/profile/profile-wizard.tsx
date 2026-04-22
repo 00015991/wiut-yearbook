@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardTitle, CardDescription } from '@/components/ui/card';
 import { saveStudentProfile } from '@/lib/actions/student';
-import { getRandomQuotePrompt, QUOTE_PROMPTS } from '@/lib/utils';
+import { getRandomQuotePrompt } from '@/lib/utils';
 import { ChevronRight, ChevronLeft, Check, Sparkles, Quote, Music, MapPin, Share2 } from 'lucide-react';
 
 interface ProfileWizardProps {
@@ -22,7 +22,6 @@ interface ProfileWizardProps {
     facebook_url?: string | null;
     telegram_username?: string | null;
   } | null;
-  studentName: string;
   hasPortrait: boolean;
 }
 
@@ -33,7 +32,7 @@ const steps = [
   { id: 'social', title: 'Social Links', icon: Share2, description: 'Help classmates find you' },
 ];
 
-export function ProfileWizard({ profile, studentName, hasPortrait }: ProfileWizardProps) {
+export function ProfileWizard({ profile, hasPortrait }: ProfileWizardProps) {
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);

@@ -1,22 +1,41 @@
 import { BookOpen } from 'lucide-react';
 import Link from 'next/link';
 
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
+/**
+ * Auth pages share a centered-card layout on a cream background with a fine
+ * editorial masthead (small monogram, serif wordmark, muted eyebrow caption)
+ * instead of a loud logo. No gradients, no skewed decorations — just paper.
+ */
+export default function AuthLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-beige-light px-4 py-12">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-beige-light px-4 py-14 sm:py-20">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2.5 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-burgundy flex items-center justify-center">
-              <BookOpen className="w-5 h-5 text-white" />
+        <div className="text-center mb-10">
+          <Link
+            href="/"
+            className="inline-flex flex-col items-center gap-3 group"
+          >
+            <div className="w-12 h-12 rounded-md bg-burgundy text-white flex items-center justify-center shadow-paper-sm group-hover:bg-burgundy-light transition-colors">
+              <BookOpen className="w-5 h-5" strokeWidth={1.7} />
             </div>
-            <span className="font-heading text-2xl font-bold text-night">WIUT Yearbook</span>
+            <div className="flex flex-col items-center">
+              <span className="display-serif text-[22px] text-night">
+                WIUT Yearbook
+              </span>
+              <span className="eyebrow mt-1.5 text-warm-gray">
+                A private graduation book
+              </span>
+            </div>
           </Link>
-          <p className="text-warm-gray text-sm">
-            A private graduation book for WIUT students
-          </p>
         </div>
         {children}
+        <p className="text-center text-[11px] text-warm-gray/70 tracking-wider uppercase mt-8">
+          Westminster International University · Tashkent
+        </p>
       </div>
     </div>
   );

@@ -3,7 +3,6 @@
 import { cn } from '@/lib/utils';
 import { Upload, X, RotateCw } from 'lucide-react';
 import { useState, useRef, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
 import { IMAGE_CONFIG, isAllowedMimeType, isWithinSizeLimit } from '@/lib/storage';
 
 interface PhotoUploaderProps {
@@ -106,6 +105,7 @@ export function PhotoUploader({
       >
         {preview ? (
           <>
+            {/* eslint-disable-next-line @next/next/no-img-element -- local object URL preview */}
             <img
               src={preview}
               alt={`${category} preview`}

@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getUserWithRole } from '@/lib/auth';
 import { studentProfileSchema, yearbookMessageSchema } from '@/lib/validators';
 import { calculateProfileCompletion, isMessageFlagged } from '@/lib/utils';
-import { PHOTO_LIMITS, MESSAGE_LIMITS } from '@/types';
+import { MESSAGE_LIMITS } from '@/types';
 import { revalidatePath } from 'next/cache';
 
 export async function saveStudentProfile(formData: FormData) {
@@ -52,7 +52,8 @@ export async function saveStudentProfile(formData: FormData) {
     return { error: 'Failed to save profile.' };
   }
 
-  // Update completion percentage
+  // Update completion percentage — best-effort, failing here shouldn't
+  // block the user from continuing to edit their profile.
   const { data: photos } = await supabase
     .from('student_photos')
     .select('id')
@@ -73,10 +74,14 @@ export async function saveStudentProfile(formData: FormData) {
     (photos?.length || 0) > 0
   );
 
-  await supabase
+  const { error: completionErr } = await supabase
     .from('students')
     .update({ profile_completion_pct: completion })
     .eq('id', user.studentId);
+
+  if (completionErr) {
+    console.warn('[saveStudentProfile] completion update failed:', completionErr.message);
+  }
 
   revalidatePath('/student/profile');
   return { success: true };
@@ -90,12 +95,13 @@ export async function submitStudentProfile() {
 
   const supabase = await createClient();
 
-  // Check that profile has minimum required fields
+  // Check that profile has minimum required fields — maybeSingle because
+  // a student without a profile row yet is an expected early-state case.
   const { data: profile } = await supabase
     .from('student_profiles')
     .select('quote')
     .eq('student_id', user.studentId)
-    .single();
+    .maybeSingle();
 
   if (!profile?.quote) {
     return { error: 'Please add a quote before submitting.' };
@@ -114,8 +120,8 @@ export async function submitStudentProfile() {
     return { error: 'Please upload a portrait photo before submitting.' };
   }
 
-  // Update profile status
-  await supabase
+  // Flip profile to pending
+  const { error: profileErr } = await supabase
     .from('student_profiles')
     .update({
       profile_status: 'pending',
@@ -123,13 +129,22 @@ export async function submitStudentProfile() {
     })
     .eq('student_id', user.studentId);
 
-  // Update all draft/pending photos to pending
-  await supabase
+  if (profileErr) {
+    return { error: 'Failed to submit profile.' };
+  }
+
+  // Promote any draft photos to pending for moderation. Failure here means
+  // photos won't enter the moderation queue — surface to the caller.
+  const { error: photosErr } = await supabase
     .from('student_photos')
     .update({ moderation_status: 'pending' })
     .eq('student_id', user.studentId)
     .eq('moderation_status', 'draft')
     .eq('is_deleted', false);
+
+  if (photosErr) {
+    return { error: 'Profile submitted, but failed to queue photos for review.' };
+  }
 
   revalidatePath('/student/status');
   return { success: true };
@@ -193,7 +208,8 @@ export async function sendYearbookMessage(formData: FormData) {
     return { error: 'Failed to send message.' };
   }
 
-  revalidatePath(`/year/[year]/students/[slug]`);
+  // Next 16: dynamic-segment patterns require the 'page' type argument.
+  revalidatePath('/year/[year]/students/[slug]', 'page');
   return { success: true };
 }
 
@@ -210,16 +226,20 @@ export async function toggleMessageVisibility(messageId: string) {
     .select('is_visible')
     .eq('id', messageId)
     .eq('recipient_student_id', user.studentId)
-    .single();
+    .maybeSingle();
 
   if (!message) {
     return { error: 'Message not found.' };
   }
 
-  await supabase
+  const { error: updateErr } = await supabase
     .from('yearbook_messages')
     .update({ is_visible: !message.is_visible })
     .eq('id', messageId);
+
+  if (updateErr) {
+    return { error: 'Failed to update message visibility.' };
+  }
 
   revalidatePath('/student/messages');
   return { success: true };

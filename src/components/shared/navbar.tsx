@@ -3,12 +3,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { logout } from '@/lib/actions/auth';
 import {
   BookOpen,
   Users,
   GraduationCap,
   Image,
-  Baby,
+  Sparkles,
   Award,
   BarChart3,
   Menu,
@@ -38,7 +39,7 @@ export function Navbar({ yearSlug, yearLabel, role, userName }: NavbarProps) {
     { href: `${basePath}/staff`, label: 'Staff', icon: GraduationCap },
     { href: `${basePath}/courses`, label: 'Courses', icon: GraduationCap },
     { href: `${basePath}/gallery`, label: 'Gallery', icon: Image },
-    { href: `${basePath}/childhood`, label: 'Then & Now', icon: Baby },
+    { href: `${basePath}/childhood`, label: 'Childhood', icon: Sparkles },
     { href: `${basePath}/superlatives`, label: 'Awards', icon: Award },
     { href: `${basePath}/statistics`, label: 'Stats', icon: BarChart3 },
   ];
@@ -51,22 +52,26 @@ export function Navbar({ yearSlug, yearLabel, role, userName }: NavbarProps) {
         : '/student/profile';
 
   return (
-    <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-lg border-b border-soft-border">
+    <header className="sticky top-0 z-40 bg-beige-light/85 backdrop-blur-xl border-b border-soft-border">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
-          {/* Logo */}
-          <Link href={basePath} className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-burgundy flex items-center justify-center">
-              <BookOpen className="w-4 h-4 text-white" />
+        <div className="flex h-16 items-center justify-between gap-6">
+          {/* Logo — wordmark-first, small monogram for recognition at narrow widths. */}
+          <Link href={basePath} className="flex items-center gap-3 group">
+            <div className="w-9 h-9 rounded-md bg-burgundy text-white flex items-center justify-center shadow-paper-sm">
+              <BookOpen className="w-4 h-4" strokeWidth={1.8} />
             </div>
-            <div>
-              <span className="font-heading font-bold text-night text-sm">WIUT</span>
-              <span className="text-warm-gray text-xs ml-1">Class of {yearLabel}</span>
+            <div className="flex flex-col leading-tight">
+              <span className="font-heading text-[15px] font-semibold text-night tracking-tight">
+                WIUT Yearbook
+              </span>
+              <span className="text-[11px] text-warm-gray tracking-wider uppercase">
+                Class of {yearLabel}
+              </span>
             </div>
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-0.5">
             {navItems.map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
               return (
@@ -74,32 +79,39 @@ export function Navbar({ yearSlug, yearLabel, role, userName }: NavbarProps) {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'px-3 py-2 text-sm rounded-lg transition-colors duration-200',
+                    'relative px-3 py-2 text-[13px] rounded-md transition-colors duration-200',
                     isActive
-                      ? 'bg-burgundy/10 text-burgundy font-medium'
-                      : 'text-warm-gray hover:text-night hover:bg-beige'
+                      ? 'text-night font-medium'
+                      : 'text-warm-gray hover:text-night'
                   )}
                 >
                   {item.label}
+                  {isActive && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute left-3 right-3 -bottom-0.5 h-px bg-burgundy"
+                    />
+                  )}
                 </Link>
               );
             })}
           </nav>
 
           {/* Right side */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <Link
               href={dashboardLink}
-              className="hidden sm:flex items-center gap-2 px-3 py-2 text-sm rounded-lg bg-beige hover:bg-beige-dark transition-colors"
+              className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 text-[13px] rounded-md border border-soft-border bg-white text-night hover:bg-beige hover:border-warm-gray/30 transition-colors"
             >
-              <User className="w-4 h-4" />
+              <User className="w-3.5 h-3.5" strokeWidth={1.8} />
               <span className="hidden md:inline">{userName || 'Dashboard'}</span>
             </Link>
 
             {/* Mobile menu button */}
             <button
-              className="lg:hidden p-2 rounded-lg hover:bg-beige transition-colors"
+              className="lg:hidden p-2 rounded-md text-night hover:bg-beige transition-colors"
               onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label="Toggle menu"
             >
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -110,7 +122,7 @@ export function Navbar({ yearSlug, yearLabel, role, userName }: NavbarProps) {
       {/* Mobile Nav */}
       {mobileOpen && (
         <div className="lg:hidden border-t border-soft-border bg-white animate-fade-in">
-          <nav className="px-4 py-3 space-y-1">
+          <nav className="px-4 py-3 space-y-0.5">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
@@ -120,29 +132,32 @@ export function Navbar({ yearSlug, yearLabel, role, userName }: NavbarProps) {
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
                   className={cn(
-                    'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors',
+                    'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors',
                     isActive
-                      ? 'bg-burgundy/10 text-burgundy font-medium'
-                      : 'text-warm-gray hover:bg-beige'
+                      ? 'bg-burgundy/8 text-burgundy font-medium'
+                      : 'text-warm-gray hover:bg-beige hover:text-night'
                   )}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-4 h-4" strokeWidth={1.6} />
                   {item.label}
                 </Link>
               );
             })}
-            <hr className="border-soft-border my-2" />
+            <div className="hairline border-t my-2" />
             <Link
               href={dashboardLink}
               onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-warm-gray hover:bg-beige"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-warm-gray hover:bg-beige"
             >
-              <User className="w-4 h-4" />
+              <User className="w-4 h-4" strokeWidth={1.6} />
               Dashboard
             </Link>
-            <form action="/api/auth/signout" method="POST">
-              <button className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-error hover:bg-error/5 w-full">
-                <LogOut className="w-4 h-4" />
+            <form action={logout}>
+              <button
+                type="submit"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-error hover:bg-error/5 w-full"
+              >
+                <LogOut className="w-4 h-4" strokeWidth={1.6} />
                 Sign Out
               </button>
             </form>

@@ -18,14 +18,21 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
       <div className="space-y-1.5">
         {label && (
           <div className="flex items-center justify-between">
-            <label htmlFor={inputId} className="block text-sm font-medium text-night">
+            <label
+              htmlFor={inputId}
+              className="block text-[13px] font-medium text-night tracking-tight"
+            >
               {label}
             </label>
             {maxChars !== undefined && (
-              <span className={cn(
-                'text-xs',
-                charCount !== undefined && charCount > maxChars ? 'text-error' : 'text-warm-gray'
-              )}>
+              <span
+                className={cn(
+                  'text-[11px] tabular-nums',
+                  charCount !== undefined && charCount > maxChars
+                    ? 'text-error'
+                    : 'text-warm-gray'
+                )}
+              >
                 {charCount ?? 0}/{maxChars}
               </span>
             )}
@@ -35,19 +42,19 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           ref={ref}
           id={inputId}
           className={cn(
-            'w-full px-4 py-3 rounded-xl border bg-white text-night resize-none',
-            'placeholder:text-warm-gray/60 transition-colors duration-200',
-            'focus:outline-none focus:ring-2 focus:ring-burgundy/30 focus:border-burgundy',
+            'w-full px-3.5 py-3 rounded-lg border bg-white text-[15px] text-night resize-none',
+            'placeholder:text-warm-gray/60 transition-[border-color,box-shadow] duration-200',
+            'focus:outline-none focus:ring-2 focus:ring-burgundy/25 focus:border-burgundy/80',
             error
-              ? 'border-error focus:ring-error/30 focus:border-error'
+              ? 'border-error/70 focus:ring-error/25 focus:border-error'
               : 'border-soft-border',
             className
           )}
           rows={4}
           {...props}
         />
-        {error && <p className="text-sm text-error">{error}</p>}
-        {hint && !error && <p className="text-sm text-warm-gray">{hint}</p>}
+        {error && <p className="text-xs text-error">{error}</p>}
+        {hint && !error && <p className="text-xs text-warm-gray">{hint}</p>}
       </div>
     );
   }

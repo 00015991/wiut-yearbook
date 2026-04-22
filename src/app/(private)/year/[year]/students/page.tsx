@@ -1,12 +1,16 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getGraduationYearBySlug, getVisibleStudentsByYear, getCoursesByYear } from '@/lib/queries';
-import { createClient } from '@/lib/supabase/server';
-import { BUCKET_NAME } from '@/lib/storage';
+import {
+  getGraduationYearBySlug,
+  getVisibleStudentsByYear,
+  getCoursesByYear,
+} from '@/lib/queries';
+import { signStoragePath } from '@/lib/storage/signed-url';
 import { PageContainer, SectionHeading } from '@/components/shared/page-shell';
 import { Avatar } from '@/components/ui/avatar';
 import { Users } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
+import { cn } from '@/lib/utils';
 
 export default async function StudentsPage({
   params,
@@ -25,20 +29,15 @@ export default async function StudentsPage({
     getCoursesByYear(yearData.id),
   ]);
 
-  // Generate signed URLs for portraits
-  const supabase = await createClient();
+  // Generate signed URLs for portraits.
   const studentsWithUrls = await Promise.all(
     students.map(async (student) => {
-      let portraitUrl = '';
       const portrait = student.portrait;
-      if (portrait) {
-        const { data } = await supabase.storage
-          .from(BUCKET_NAME)
-          .createSignedUrl(portrait.storage_thumb_path, 3600);
-        portraitUrl = data?.signedUrl || '';
-      }
+      const portraitUrl = portrait
+        ? ((await signStoragePath(portrait.storage_thumb_path)) ?? '')
+        : '';
       return { ...student, portraitUrl };
-    })
+    }),
   );
 
   // Filter
@@ -52,55 +51,51 @@ export default async function StudentsPage({
   }
 
   return (
-    <PageContainer className="py-10">
+    <PageContainer className="py-14 sm:py-20">
       <SectionHeading
-        title="Our Graduates"
-        subtitle={`${filtered.length} students from the Class of ${yearData.year_label}`}
+        eyebrow={`Class of ${yearData.year_label}`}
+        title="Our graduates"
+        subtitle={`${filtered.length} ${
+          filtered.length === 1 ? 'portrait' : 'portraits'
+        } from the class roster.`}
       />
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-8">
-        <Link
-          href={`/year/${yearSlug}/students`}
-          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-            !filters.course
-              ? 'bg-burgundy text-white'
-              : 'bg-white border border-soft-border text-warm-gray hover:bg-beige'
-          }`}
-        >
-          All
-        </Link>
+      {/* Filters — tab-like chips, no rounded-full pills. */}
+      <nav
+        aria-label="Filter by course"
+        className="flex flex-wrap gap-2 mb-10 pb-5 hairline border-b"
+      >
+        <FilterPill href={`/year/${yearSlug}/students`} active={!filters.course}>
+          All courses
+        </FilterPill>
         {courses.map((course) => (
-          <Link
+          <FilterPill
             key={course.id}
             href={`/year/${yearSlug}/students?course=${course.id}`}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-              filters.course === course.id
-                ? 'bg-burgundy text-white'
-                : 'bg-white border border-soft-border text-warm-gray hover:bg-beige'
-            }`}
+            active={filters.course === course.id}
           >
             {course.name}
-          </Link>
+          </FilterPill>
         ))}
-      </div>
+      </nav>
 
       {/* Student Grid */}
       {filtered.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 stagger-children">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5 sm:gap-6 stagger-children">
           {filtered.map((student) => (
             <Link
               key={student.id}
               href={`/year/${yearSlug}/students/${student.slug}`}
-              className="group"
+              className="group block"
             >
-              <div className="bg-white rounded-2xl overflow-hidden border border-soft-border hover:shadow-lg hover:shadow-burgundy/5 transition-all duration-300">
-                <div className="aspect-[3/4] relative overflow-hidden bg-beige">
+              <figure className="overflow-hidden rounded-md bg-beige ring-1 ring-soft-border shadow-paper-sm transition-[transform,box-shadow] duration-500 ease-out group-hover:-translate-y-1 group-hover:shadow-paper-md">
+                <div className="aspect-[3/4] overflow-hidden">
                   {student.portraitUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- Supabase signed URL
                     <img
                       src={student.portraitUrl}
                       alt={student.full_name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.04]"
                       loading="lazy"
                     />
                   ) : (
@@ -109,13 +104,17 @@ export default async function StudentsPage({
                     </div>
                   )}
                 </div>
-                <div className="p-3">
-                  <h3 className="font-medium text-night text-sm truncate">{student.full_name}</h3>
-                  {student.course && (
-                    <p className="text-xs text-warm-gray truncate mt-0.5">{student.course.name}</p>
-                  )}
-                </div>
-              </div>
+              </figure>
+              <figcaption className="mt-3">
+                <h3 className="font-heading text-[15px] text-night truncate group-hover:text-burgundy transition-colors">
+                  {student.full_name}
+                </h3>
+                {student.course && (
+                  <p className="text-[12px] text-warm-gray truncate mt-0.5 tracking-wide">
+                    {student.course.name}
+                  </p>
+                )}
+              </figcaption>
             </Link>
           ))}
         </div>
@@ -123,9 +122,33 @@ export default async function StudentsPage({
         <EmptyState
           icon={Users}
           title="No students yet"
-          description="Students will appear here once they complete their profiles."
+          description="Portraits will appear here once classmates complete their profiles."
         />
       )}
     </PageContainer>
+  );
+}
+
+function FilterPill({
+  href,
+  active,
+  children,
+}: {
+  href: string;
+  active?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        'px-3.5 py-1.5 text-[13px] rounded-md border transition-colors',
+        active
+          ? 'bg-night text-white border-night'
+          : 'bg-white text-warm-gray border-soft-border hover:text-night hover:border-warm-gray/30',
+      )}
+    >
+      {children}
+    </Link>
   );
 }

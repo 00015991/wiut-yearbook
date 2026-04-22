@@ -4,8 +4,8 @@
   "description": "A private digital yearbook for WIUT graduating classes — preserving every story, every friendship, every moment.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f5efe6",
-  "theme_color": "#6b1f2a",
+  "background_color": "#FAF8F5",
+  "theme_color": "#8B2252",
   "orientation": "portrait-primary",
   "categories": ["education", "social", "photo"],
   "lang": "en",
@@ -24,19 +24,19 @@
       "name": "My Profile",
       "short_name": "Profile",
       "description": "Edit your yearbook profile",
-      "url": "/dashboard/profile"
+      "url": "/student/profile"
     },
     {
       "name": "Upload Photos",
       "short_name": "Photos",
       "description": "Upload your yearbook photos",
-      "url": "/dashboard/photos"
+      "url": "/student/photos"
     },
     {
       "name": "Messages",
       "short_name": "Messages",
       "description": "View yearbook signing messages",
-      "url": "/dashboard/messages"
+      "url": "/student/messages"
     }
   ],
   "prefer_related_applications": false

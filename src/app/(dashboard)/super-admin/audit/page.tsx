@@ -1,25 +1,47 @@
 import { createClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { PageShell, PageContainer, SectionHeading } from '@/components/shared/page-shell'
-import { Badge } from '@/components/ui/badge'
 import { formatRelativeTime } from '@/lib/utils'
+
+// Shape of the joined row we get back from Supabase. Keep it minimal so a
+// schema rename shows up as a type error rather than a runtime surprise.
+type AuditLogRow = {
+  id: string
+  actor_user_id: string | null
+  action_type: string
+  entity_type: string
+  entity_id: string | null
+  details_json: Record<string, unknown> | null
+  created_at: string
+  actor: { email: string; role: string } | null
+}
 
 async function getAuditLogs(page: number = 1, limit: number = 50) {
   const supabase = await createClient()
   const offset = (page - 1) * limit
 
+  // audit_logs has NO graduation_year_id column, so there's no year to join.
+  // The actor FK lives on actor_user_id — the hint follows the column name.
   const { data, error, count } = await supabase
     .from('audit_logs')
-    .select(`
-      *,
-      actor:app_users!audit_logs_actor_id_fkey(email, role),
-      year:graduation_years(name, slug)
-    `, { count: 'exact' })
+    .select(
+      `
+      id,
+      actor_user_id,
+      action_type,
+      entity_type,
+      entity_id,
+      details_json,
+      created_at,
+      actor:app_users!audit_logs_actor_user_id_fkey(email, role)
+      `,
+      { count: 'exact' },
+    )
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1)
 
   if (error) throw error
-  return { logs: data ?? [], total: count ?? 0 }
+  return { logs: (data ?? []) as unknown as AuditLogRow[], total: count ?? 0 }
 }
 
 const ACTION_COLORS: Record<string, string> = {
@@ -41,7 +63,7 @@ function getActionColor(action: string) {
 }
 
 function formatAction(action: string) {
-  return action.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+  return action.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
 export default async function SuperAdminAuditPage({
@@ -52,9 +74,9 @@ export default async function SuperAdminAuditPage({
   await requireRole('super_admin')
 
   const params = await searchParams
-  const page = Number(params.page ?? 1)
+  const page = Math.max(1, Number(params.page ?? 1) || 1)
   const { logs, total } = await getAuditLogs(page)
-  const totalPages = Math.ceil(total / 50)
+  const totalPages = Math.max(1, Math.ceil(total / 50))
 
   return (
     <PageShell>
@@ -95,12 +117,11 @@ export default async function SuperAdminAuditPage({
                     <th className="text-left px-4 py-3 font-medium text-warm-gray-600">Actor</th>
                     <th className="text-left px-4 py-3 font-medium text-warm-gray-600">Action</th>
                     <th className="text-left px-4 py-3 font-medium text-warm-gray-600">Entity</th>
-                    <th className="text-left px-4 py-3 font-medium text-warm-gray-600">Year</th>
                     <th className="text-left px-4 py-3 font-medium text-warm-gray-600">Details</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-warm-gray-100">
-                  {logs.map((log: any) => (
+                  {logs.map((log) => (
                     <tr key={log.id} className="hover:bg-warm-gray-50/50 transition-colors">
                       <td className="px-4 py-3 text-warm-gray-500 whitespace-nowrap">
                         {formatRelativeTime(log.created_at)}
@@ -111,34 +132,37 @@ export default async function SuperAdminAuditPage({
                             {log.actor?.email ?? 'System'}
                           </p>
                           {log.actor?.role && (
-                            <p className="text-xs text-warm-gray-400 capitalize">{log.actor.role.replace('_', ' ')}</p>
+                            <p className="text-xs text-warm-gray-400 capitalize">
+                              {log.actor.role.replace('_', ' ')}
+                            </p>
                           )}
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getActionColor(log.action)}`}>
-                          {formatAction(log.action)}
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getActionColor(log.action_type)}`}
+                        >
+                          {formatAction(log.action_type)}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-warm-gray-600">
-                        <span className="capitalize">{log.entity_type?.replace(/_/g, ' ') ?? '—'}</span>
+                        <span className="capitalize">
+                          {log.entity_type?.replace(/_/g, ' ') ?? '—'}
+                        </span>
                         {log.entity_id && (
                           <span className="ml-1 text-warm-gray-400 font-mono text-xs">
                             #{String(log.entity_id).slice(0, 8)}
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-warm-gray-500 text-xs">
-                        {log.year?.name ?? '—'}
-                      </td>
                       <td className="px-4 py-3 max-w-[220px]">
-                        {log.metadata && Object.keys(log.metadata).length > 0 ? (
+                        {log.details_json && Object.keys(log.details_json).length > 0 ? (
                           <details className="cursor-pointer">
                             <summary className="text-xs text-burgundy hover:underline">
                               View details
                             </summary>
                             <pre className="mt-1 text-xs bg-warm-gray-50 rounded p-2 overflow-x-auto max-h-32 text-warm-gray-600">
-                              {JSON.stringify(log.metadata, null, 2)}
+                              {JSON.stringify(log.details_json, null, 2)}
                             </pre>
                           </details>
                         ) : (
@@ -157,7 +181,8 @@ export default async function SuperAdminAuditPage({
         {totalPages > 1 && (
           <div className="flex items-center justify-between mt-6">
             <p className="text-sm text-warm-gray-500">
-              Showing {((page - 1) * 50) + 1}–{Math.min(page * 50, total)} of {total.toLocaleString()} events
+              Showing {(page - 1) * 50 + 1}–{Math.min(page * 50, total)} of{' '}
+              {total.toLocaleString()} events
             </p>
             <div className="flex gap-2">
               {page > 1 && (

@@ -1,6 +1,7 @@
 import { requireRole } from '@/lib/auth';
 import { SectionHeading } from '@/components/shared/page-shell';
 import { Card, CardTitle, CardDescription } from '@/components/ui/card';
+import { BUCKET_NAME } from '@/lib/storage';
 
 export default async function PlatformSettingsPage() {
   await requireRole('super_admin');
@@ -28,7 +29,7 @@ export default async function PlatformSettingsPage() {
           <CardDescription>Storage configuration</CardDescription>
           <div className="mt-4 space-y-2">
             <SettingRow label="Provider" value="Supabase Storage" />
-            <SettingRow label="Bucket" value="graduation-book-private (private)" />
+            <SettingRow label="Bucket" value={`${BUCKET_NAME} (private)`} />
             <SettingRow label="Signed URL TTL" value="3600 seconds" />
           </div>
         </Card>

@@ -1,12 +1,15 @@
 import { notFound } from 'next/navigation';
-import { getGraduationYearBySlug, getApprovedGalleryPhotos } from '@/lib/queries';
-import { createClient } from '@/lib/supabase/server';
-import { BUCKET_NAME } from '@/lib/storage';
+import {
+  getGraduationYearBySlug,
+  getApprovedGalleryPhotos,
+} from '@/lib/queries';
+import { signStoragePath } from '@/lib/storage/signed-url';
 import { PageContainer, SectionHeading } from '@/components/shared/page-shell';
 import { EmptyState } from '@/components/ui/empty-state';
 import { GalleryClient } from './gallery-client';
 import { Image } from 'lucide-react';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 export default async function GalleryPage({
   params,
@@ -25,24 +28,33 @@ export default async function GalleryPage({
     limit: 48,
   });
 
-  const supabase = await createClient();
   const photosWithUrls = await Promise.all(
-    photos.map(async (photo: { id: string; storage_display_path: string; storage_thumb_path: string; caption: string | null; orientation: string | null; category: string; student?: { full_name: string; slug: string } }) => {
-      const [displaySigned, thumbSigned] = await Promise.all([
-        supabase.storage.from(BUCKET_NAME).createSignedUrl(photo.storage_display_path, 3600),
-        supabase.storage.from(BUCKET_NAME).createSignedUrl(photo.storage_thumb_path, 3600),
-      ]);
-      return {
-        id: photo.id,
-        displayUrl: displaySigned.data?.signedUrl || '',
-        thumbUrl: thumbSigned.data?.signedUrl || '',
-        caption: photo.caption,
-        orientation: photo.orientation,
-        category: photo.category,
-        studentName: photo.student?.full_name || '',
-        studentSlug: photo.student?.slug || '',
-      };
-    })
+    photos.map(
+      async (photo: {
+        id: string;
+        storage_display_path: string;
+        storage_thumb_path: string;
+        caption: string | null;
+        orientation: string | null;
+        category: string;
+        student?: { full_name: string; slug: string };
+      }) => {
+        const [displayUrl, thumbUrl] = await Promise.all([
+          signStoragePath(photo.storage_display_path),
+          signStoragePath(photo.storage_thumb_path),
+        ]);
+        return {
+          id: photo.id,
+          displayUrl: displayUrl || '',
+          thumbUrl: thumbUrl || '',
+          caption: photo.caption,
+          orientation: photo.orientation,
+          category: photo.category,
+          studentName: photo.student?.full_name || '',
+          studentSlug: photo.student?.slug || '',
+        };
+      },
+    ),
   );
 
   const categories = [
@@ -53,28 +65,37 @@ export default async function GalleryPage({
   ];
 
   return (
-    <PageContainer className="py-10">
+    <PageContainer className="py-14 sm:py-20">
       <SectionHeading
+        eyebrow="Memories"
         title="Gallery"
-        subtitle="Memories captured during our time together"
+        subtitle="The years we spent making memories, in no particular order."
       />
 
       {/* Category Filters */}
-      <div className="flex flex-wrap gap-3 mb-8">
+      <nav
+        aria-label="Filter gallery"
+        className="flex flex-wrap gap-2 mb-10 pb-5 hairline border-b"
+      >
         {categories.map((cat) => (
           <Link
             key={cat.value}
-            href={cat.value ? `/year/${yearSlug}/gallery?category=${cat.value}` : `/year/${yearSlug}/gallery`}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            href={
+              cat.value
+                ? `/year/${yearSlug}/gallery?category=${cat.value}`
+                : `/year/${yearSlug}/gallery`
+            }
+            className={cn(
+              'px-3.5 py-1.5 text-[13px] rounded-md border transition-colors',
               (filters.category || '') === cat.value
-                ? 'bg-burgundy text-white'
-                : 'bg-white border border-soft-border text-warm-gray hover:bg-beige'
-            }`}
+                ? 'bg-night text-white border-night'
+                : 'bg-white text-warm-gray border-soft-border hover:text-night hover:border-warm-gray/30',
+            )}
           >
             {cat.label}
           </Link>
         ))}
-      </div>
+      </nav>
 
       {photosWithUrls.length > 0 ? (
         <GalleryClient photos={photosWithUrls} yearSlug={yearSlug} />
@@ -82,7 +103,7 @@ export default async function GalleryPage({
         <EmptyState
           icon={Image}
           title="No photos yet"
-          description="Photos will appear once students upload and admins approve them."
+          description="Photos will appear here once students upload and admins approve them."
         />
       )}
     </PageContainer>

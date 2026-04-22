@@ -38,7 +38,6 @@ export default async function StudentProfilePage() {
       {/* Profile Wizard */}
       <ProfileWizard
         profile={profile}
-        studentName={student.full_name}
         hasPortrait={hasPortrait}
       />
     </div>

@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { requireRole } from '@/lib/auth';
-import { getMessagesForStudent, getMessagesSentByStudent } from '@/lib/queries';
+import { getMessagesSentByStudent } from '@/lib/queries';
 import { createClient } from '@/lib/supabase/server';
 import { SectionHeading } from '@/components/shared/page-shell';
 import { Card } from '@/components/ui/card';
@@ -8,16 +8,13 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Badge } from '@/components/ui/badge';
 import { MESSAGE_LIMITS } from '@/types';
 import { MessageToggle } from './message-toggle';
-import { MessageSquare, Eye, EyeOff } from 'lucide-react';
+import { MessageSquare } from 'lucide-react';
 
 export default async function StudentMessagesPage() {
   const user = await requireRole('student');
   if (!user.studentId || !user.yearId) redirect('/login');
 
-  const [messages, sentCount] = await Promise.all([
-    getMessagesForStudent(user.studentId, user.yearId),
-    getMessagesSentByStudent(user.studentId, user.yearId),
-  ]);
+  const sentCount = await getMessagesSentByStudent(user.studentId, user.yearId);
 
   // Also get hidden messages (all messages including hidden)
   const supabase = await createClient();

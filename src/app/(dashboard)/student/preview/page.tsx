@@ -1,11 +1,9 @@
 import { redirect } from 'next/navigation';
 import { requireRole } from '@/lib/auth';
 import { getStudentDashboard } from '@/lib/queries';
-import { createClient } from '@/lib/supabase/server';
-import { BUCKET_NAME } from '@/lib/storage';
+import { signStoragePath } from '@/lib/storage/signed-url';
 import { SectionHeading } from '@/components/shared/page-shell';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { SignedImage } from '@/components/media/signed-image';
 import { AtSign, Link as LinkIcon, Globe, Send, Music, MapPin, Heart } from 'lucide-react';
 
@@ -16,26 +14,18 @@ export default async function StudentPreviewPage() {
   const { student, profile, photos } = await getStudentDashboard(user.studentId);
   if (!student) redirect('/login');
 
-  const supabase = await createClient();
-
   const portrait = photos.find((p) => p.category === 'portrait' && !p.is_deleted);
   const generalPhotos = photos.filter((p) => p.category === 'general' && !p.is_deleted);
 
-  let portraitUrl = '';
-  if (portrait) {
-    const { data } = await supabase.storage
-      .from(BUCKET_NAME)
-      .createSignedUrl(portrait.storage_display_path, 3600);
-    portraitUrl = data?.signedUrl || '';
-  }
+  const portraitUrl = portrait
+    ? ((await signStoragePath(portrait.storage_display_path)) ?? '')
+    : '';
 
   const generalUrls = await Promise.all(
-    generalPhotos.map(async (p) => {
-      const { data } = await supabase.storage
-        .from(BUCKET_NAME)
-        .createSignedUrl(p.storage_thumb_path, 3600);
-      return { id: p.id, url: data?.signedUrl || '' };
-    })
+    generalPhotos.map(async (p) => ({
+      id: p.id,
+      url: (await signStoragePath(p.storage_thumb_path)) ?? '',
+    }))
   );
 
   return (
@@ -139,6 +129,7 @@ export default async function StudentPreviewPage() {
               <div className="grid grid-cols-3 gap-3">
                 {generalUrls.map((p) => (
                   <div key={p.id} className="aspect-square rounded-xl overflow-hidden bg-beige">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- Supabase signed URL */}
                     <img src={p.url} alt="Photo" className="w-full h-full object-cover" />
                   </div>
                 ))}

@@ -4,7 +4,7 @@ import { SectionHeading } from '@/components/shared/page-shell';
 import { Card } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
-import { InviteButton } from './invite-button';
+import { InviteButton, ResendInviteButton } from './invite-button';
 import { Mail } from 'lucide-react';
 
 export default async function InvitationsPage() {
@@ -49,7 +49,7 @@ export default async function InvitationsPage() {
                   <p className="font-medium text-night text-sm">{student.full_name}</p>
                   <p className="text-xs text-warm-gray">{student.wiut_email}</p>
                 </div>
-                <InviteButton studentId={student.id} studentName={student.full_name} />
+                <InviteButton studentId={student.id} />
               </div>
             </Card>
           ))}
@@ -77,12 +77,15 @@ export default async function InvitationsPage() {
                     <p className="text-sm text-night">{student.full_name}</p>
                     <p className="text-xs text-warm-gray">{student.wiut_email}</p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <StatusBadge status={student.approval_status} />
                     {student.joined_at && (
                       <span className="text-xs text-warm-gray">
                         Joined {new Date(student.joined_at).toLocaleDateString()}
                       </span>
+                    )}
+                    {student.approval_status === 'invited' && (
+                      <ResendInviteButton studentId={student.id} />
                     )}
                   </div>
                 </div>

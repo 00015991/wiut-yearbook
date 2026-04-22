@@ -4,10 +4,9 @@ import { SectionHeading } from '@/components/shared/page-shell';
 import { Card } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { CSVUpload } from './csv-upload';
-import { Users, Upload } from 'lucide-react';
+import { Users } from 'lucide-react';
 
 export default async function AdminStudentsPage() {
   const user = await requireRole('admin', 'super_admin');

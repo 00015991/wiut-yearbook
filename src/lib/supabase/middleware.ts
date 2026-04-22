@@ -35,7 +35,17 @@ export async function updateSession(request: NextRequest) {
   const publicRoutes = ['/login', '/request-access', '/activate', '/forgot-password'];
   const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
   const isApiRoute = pathname.startsWith('/api');
-  const isStaticRoute = pathname.startsWith('/_next') || pathname.startsWith('/favicon');
+  // Redundant with the matcher's negative lookahead, but keeps the
+  // middleware robust if the matcher ever drifts. Covers Next internals,
+  // the PWA manifest, icons, and a handful of root-level static files.
+  const isStaticRoute =
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/favicon') ||
+    pathname.startsWith('/icons/') ||
+    pathname === '/manifest.json' ||
+    pathname === '/manifest.webmanifest' ||
+    pathname === '/robots.txt' ||
+    pathname === '/sitemap.xml';
 
   if (isStaticRoute || isApiRoute) {
     return supabaseResponse;

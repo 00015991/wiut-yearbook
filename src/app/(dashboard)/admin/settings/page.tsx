@@ -4,7 +4,7 @@ import { SectionHeading } from '@/components/shared/page-shell';
 import { Card, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { YearActions } from './year-actions';
-import { Calendar, Lock, Eye } from 'lucide-react';
+import { Calendar, Lock } from 'lucide-react';
 
 export default async function AdminSettingsPage() {
   const user = await requireRole('admin', 'super_admin');

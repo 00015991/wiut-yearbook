@@ -78,6 +78,7 @@ export function PhotoLightbox({
 
       {/* Image */}
       <div className="max-w-[90vw] max-h-[85vh] flex flex-col items-center">
+        {/* eslint-disable-next-line @next/next/no-img-element -- Supabase signed URL */}
         <img
           src={photo.src}
           alt={photo.alt}

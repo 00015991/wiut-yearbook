@@ -1,6 +1,11 @@
 import type { PhotoCategory } from '@/types';
 
-const BUCKET_NAME = 'graduation-book-private';
+// Bucket name comes from env so dev/staging/prod can point at different
+// Supabase projects without touching the code. The old hardcoded default
+// ('graduation-book-private') didn't match the actual bucket in the live
+// project ('yearbook-media'), which is why every photo upload returned
+// "Upload failed. Please try again." — the bucket literally didn't exist.
+const BUCKET_NAME = process.env.STORAGE_BUCKET_NAME || 'yearbook-media';
 
 // ============================================================================
 // Storage Path Builders
@@ -70,3 +75,8 @@ export function isWithinSizeLimit(sizeBytes: number): boolean {
 export function detectOrientation(width: number, height: number): 'portrait' | 'landscape' {
   return height > width ? 'portrait' : 'landscape';
 }
+
+// `signStoragePath` lives in ./signed-url because it imports the server
+// Supabase client (which pulls in `next/headers`). Re-exporting it here
+// would drag that import into the client bundle for every caller that
+// uses a pure helper like BUCKET_NAME or isAllowedMimeType.

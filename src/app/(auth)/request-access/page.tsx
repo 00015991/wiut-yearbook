@@ -5,10 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
-import { submitAccessRequest } from '@/lib/actions/auth';
-import { createClient } from '@/lib/supabase/client';
+import { submitAccessRequest, getPublicGraduationYears } from '@/lib/actions/auth';
 import Link from 'next/link';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 
 export default function RequestAccessPage() {
   const [error, setError] = useState<string | null>(null);
@@ -16,21 +15,17 @@ export default function RequestAccessPage() {
   const [success, setSuccess] = useState(false);
   const [years, setYears] = useState<{ value: string; label: string }[]>([]);
 
+  // Load years through a server action — the table is RLS-gated to
+  // authenticated users, and folks requesting access don't have accounts yet.
   useEffect(() => {
-    const supabase = createClient();
-    supabase
-      .from('graduation_years')
-      .select('id, year_label, title')
-      .eq('status', 'active')
-      .order('year_label', { ascending: false })
-      .then(({ data }) => {
-        setYears(
-          (data || []).map((y) => ({
-            value: y.id,
-            label: y.title || `Class of ${y.year_label}`,
-          }))
-        );
-      });
+    getPublicGraduationYears().then((data) => {
+      setYears(
+        data.map((y) => ({
+          value: y.id,
+          label: y.title || `Class of ${y.year_label}`,
+        })),
+      );
+    });
   }, []);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -52,17 +47,18 @@ export default function RequestAccessPage() {
   if (success) {
     return (
       <Card padding="lg" className="text-center">
-        <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-4">
-          <CheckCircle className="w-8 h-8 text-success" />
+        <div className="w-14 h-14 rounded-full bg-success/10 ring-1 ring-success/20 flex items-center justify-center mx-auto mb-5">
+          <CheckCircle2 className="w-6 h-6 text-success" strokeWidth={1.7} />
         </div>
-        <h1 className="text-2xl font-heading font-bold text-night mb-2">
-          Request Submitted
+        <p className="eyebrow mb-2">Thank you</p>
+        <h1 className="display-serif text-[26px] text-night mb-3">
+          Request submitted
         </h1>
-        <p className="text-warm-gray mb-6">
-          Your access request has been submitted. You will receive an invitation email once approved.
+        <p className="text-warm-gray mb-6 text-[15px] leading-relaxed max-w-xs mx-auto">
+          We&rsquo;ll email an invitation once an admin has reviewed your request.
         </p>
         <Link href="/login">
-          <Button variant="outline">Back to Login</Button>
+          <Button variant="outline">Back to sign in</Button>
         </Link>
       </Card>
     );
@@ -70,27 +66,28 @@ export default function RequestAccessPage() {
 
   return (
     <Card padding="lg">
-      <h1 className="text-2xl font-heading font-bold text-night text-center mb-2">
-        Request Access
-      </h1>
-      <p className="text-warm-gray text-sm text-center mb-6">
-        Fill out the form below and an admin will review your request.
-      </p>
+      <div className="text-center mb-7">
+        <p className="eyebrow mb-2">Alumni &amp; students</p>
+        <h1 className="display-serif text-[28px] text-night">Request access</h1>
+        <p className="text-warm-gray text-sm mt-3 max-w-xs mx-auto leading-relaxed">
+          Fill out the form below and an admin will review your request shortly.
+        </p>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
           name="fullName"
-          label="Full Name"
-          placeholder="Enter your full name"
+          label="Full name"
+          placeholder="Your full name"
           required
         />
         <Input
           name="wiutEmail"
           type="email"
-          label="WIUT Email"
+          label="WIUT email"
           placeholder="you@wiut.uz"
           required
-          hint="Use your university email address"
+          hint="Please use your university email address."
         />
         <Input
           name="studentIdCode"
@@ -99,7 +96,7 @@ export default function RequestAccessPage() {
         />
         <Select
           name="graduationYearId"
-          label="Graduation Year"
+          label="Graduation year"
           options={years}
           placeholder="Select your graduation year"
           required
@@ -110,19 +107,17 @@ export default function RequestAccessPage() {
           placeholder="e.g. Business Management"
         />
 
-        {error && (
-          <p className="text-sm text-error text-center">{error}</p>
-        )}
+        {error && <p className="text-sm text-error text-center">{error}</p>}
 
         <Button type="submit" loading={loading} className="w-full" size="lg">
-          Submit Request
+          Submit request
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-warm-gray">
+      <p className="mt-7 pt-5 hairline border-t text-center text-sm text-warm-gray">
         Already have an account?{' '}
-        <Link href="/login" className="text-burgundy hover:underline">
-          Sign In
+        <Link href="/login" className="text-burgundy hover:underline underline-offset-2">
+          Sign in
         </Link>
       </p>
     </Card>

@@ -26,11 +26,13 @@ export async function getUserWithRole(): Promise<{
 
   if (!user) return null;
 
+  // maybeSingle — an auth user without an app_users row is an expected
+  // intermediate state (e.g. mid-invitation flow). Treat it as "no role".
   const { data: appUser } = await supabase
     .from('app_users')
     .select('role')
     .eq('id', user.id)
-    .single();
+    .maybeSingle();
 
   if (!appUser) return null;
 
@@ -46,13 +48,14 @@ export async function getUserWithRole(): Promise<{
     role: appUser.role as AppRole,
   };
 
-  // Get student-specific data
+  // Get student-specific data — student row may not exist yet if invitation
+  // is still in flight, so maybeSingle rather than single.
   if (appUser.role === 'student') {
     const { data: student } = await supabase
       .from('students')
       .select('id, graduation_year_id')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
     if (student) {
       result.studentId = student.id;
@@ -60,14 +63,14 @@ export async function getUserWithRole(): Promise<{
     }
   }
 
-  // Get admin-specific data
+  // Get admin-specific data — a fresh admin might not have a scope yet.
   if (appUser.role === 'admin') {
     const { data: scope } = await supabase
       .from('admin_scopes')
       .select('graduation_year_id')
       .eq('user_id', user.id)
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (scope) {
       result.yearId = scope.graduation_year_id;

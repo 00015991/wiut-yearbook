@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { Card, CardTitle, CardDescription } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { PhotoUploader } from '@/components/media/photo-uploader';
 import { uploadStudentPhoto, deleteStudentPhoto } from '@/lib/actions/upload';
 import { Trash2 } from 'lucide-react';
@@ -71,6 +70,7 @@ export function PhotoSection({
           {photos.map((photo) => (
             <div key={photo.id} className="relative group">
               <div className="aspect-square rounded-xl overflow-hidden bg-beige">
+                {/* eslint-disable-next-line @next/next/no-img-element -- Supabase signed URL */}
                 <img
                   src={photo.thumbUrl}
                   alt={`${category} photo`}

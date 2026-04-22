@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { login } from '@/lib/actions/auth';
+import { CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 
 function LoginForm() {
@@ -33,14 +34,16 @@ function LoginForm() {
   return (
     <Card padding="lg">
       {activated && (
-        <div className="mb-4 p-3 rounded-xl bg-success/10 text-success text-sm text-center">
-          Account activated successfully! You can now sign in.
+        <div className="mb-6 flex items-start gap-2 p-3 rounded-md bg-success/10 text-success text-[13px]">
+          <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" strokeWidth={1.8} />
+          <span>Account activated. You can sign in below.</span>
         </div>
       )}
 
-      <h1 className="text-2xl font-heading font-bold text-night text-center mb-6">
-        Welcome Back
-      </h1>
+      <div className="text-center mb-7">
+        <p className="eyebrow mb-2">Sign in</p>
+        <h1 className="display-serif text-[28px] text-night">Welcome back</h1>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
@@ -65,18 +68,21 @@ function LoginForm() {
         )}
 
         <Button type="submit" loading={loading} className="w-full" size="lg">
-          Sign In
+          Sign in
         </Button>
       </form>
 
-      <div className="mt-6 space-y-3 text-center text-sm">
-        <Link href="/forgot-password" className="text-burgundy hover:underline block">
+      <div className="mt-7 pt-5 hairline border-t space-y-2.5 text-center text-sm">
+        <Link
+          href="/forgot-password"
+          className="text-burgundy hover:underline underline-offset-2 block"
+        >
           Forgot your password?
         </Link>
         <p className="text-warm-gray">
           Don&apos;t have an account?{' '}
-          <Link href="/request-access" className="text-burgundy hover:underline">
-            Request Access
+          <Link href="/request-access" className="text-burgundy hover:underline underline-offset-2">
+            Request access
           </Link>
         </p>
       </div>
@@ -87,7 +93,7 @@ function LoginForm() {
 function LoginFallback() {
   return (
     <Card padding="lg" className="text-center">
-      <p className="text-warm-gray text-sm">Loading…</p>
+      <p className="text-warm-gray text-sm">Loading&hellip;</p>
     </Card>
   );
 }

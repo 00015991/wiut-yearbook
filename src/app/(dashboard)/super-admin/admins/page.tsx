@@ -1,5 +1,5 @@
 import { requireRole } from '@/lib/auth';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { SectionHeading } from '@/components/shared/page-shell';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,9 +8,14 @@ import { CreateAdminForm } from './create-admin-form';
 import { KeyRound } from 'lucide-react';
 
 export default async function ManageAdminsPage() {
+  // `requireRole` gates the page to super admins before any DB access, so we
+  // can safely use the admin client for the subsequent reads. The user-session
+  // client returned empty here because `app_users` and `admin_scopes` have
+  // RLS enabled but no select policies for super admins — this was the source
+  // of the "No year assigned" ghost state on every row.
   await requireRole('super_admin');
 
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
 
   const { data: admins } = await supabase
     .from('app_users')

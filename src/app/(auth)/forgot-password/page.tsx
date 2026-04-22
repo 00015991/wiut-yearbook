@@ -32,17 +32,19 @@ export default function ForgotPasswordPage() {
   if (sent) {
     return (
       <Card padding="lg" className="text-center">
-        <div className="w-16 h-16 rounded-full bg-burgundy/10 flex items-center justify-center mx-auto mb-4">
-          <Mail className="w-8 h-8 text-burgundy" />
+        <div className="w-14 h-14 rounded-full bg-burgundy/10 ring-1 ring-burgundy/20 flex items-center justify-center mx-auto mb-5">
+          <Mail className="w-6 h-6 text-burgundy" strokeWidth={1.7} />
         </div>
-        <h1 className="text-2xl font-heading font-bold text-night mb-2">
-          Check Your Email
+        <p className="eyebrow mb-2">Reset sent</p>
+        <h1 className="display-serif text-[26px] text-night mb-3">
+          Check your email
         </h1>
-        <p className="text-warm-gray mb-6">
-          If an account exists with that email, we sent password reset instructions.
+        <p className="text-warm-gray mb-6 text-[15px] leading-relaxed max-w-xs mx-auto">
+          If an account exists with that email, we&rsquo;ve sent password reset
+          instructions to it.
         </p>
         <Link href="/login">
-          <Button variant="outline">Back to Login</Button>
+          <Button variant="outline">Back to sign in</Button>
         </Link>
       </Card>
     );
@@ -50,12 +52,13 @@ export default function ForgotPasswordPage() {
 
   return (
     <Card padding="lg">
-      <h1 className="text-2xl font-heading font-bold text-night text-center mb-2">
-        Reset Password
-      </h1>
-      <p className="text-warm-gray text-sm text-center mb-6">
-        Enter your email and we&apos;ll send you a reset link.
-      </p>
+      <div className="text-center mb-7">
+        <p className="eyebrow mb-2">Recover access</p>
+        <h1 className="display-serif text-[28px] text-night">Reset password</h1>
+        <p className="text-warm-gray text-sm mt-3 max-w-xs mx-auto leading-relaxed">
+          Enter your email and we&rsquo;ll send you a reset link.
+        </p>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
@@ -66,18 +69,16 @@ export default function ForgotPasswordPage() {
           required
         />
 
-        {error && (
-          <p className="text-sm text-error text-center">{error}</p>
-        )}
+        {error && <p className="text-sm text-error text-center">{error}</p>}
 
         <Button type="submit" loading={loading} className="w-full" size="lg">
-          Send Reset Link
+          Send reset link
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-warm-gray">
-        <Link href="/login" className="text-burgundy hover:underline">
-          Back to Login
+      <p className="mt-7 pt-5 hairline border-t text-center text-sm">
+        <Link href="/login" className="text-burgundy hover:underline underline-offset-2">
+          Back to sign in
         </Link>
       </p>
     </Card>

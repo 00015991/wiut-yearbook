@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { getUserWithRole } from '@/lib/auth';
 import { getStudentPhotoPath, BUCKET_NAME, isAllowedMimeType, isWithinSizeLimit, detectOrientation, IMAGE_CONFIG } from '@/lib/storage';
 import { PHOTO_LIMITS } from '@/types';
@@ -8,6 +8,10 @@ import { revalidatePath } from 'next/cache';
 import sharp from 'sharp';
 
 export async function uploadStudentPhoto(formData: FormData) {
+  // `getUserWithRole` reads the session server-side and derives `studentId`
+  // from the DB, so the student can't spoof which record they're writing to
+  // by tampering with the form. Path + DB row are all built from that
+  // trusted id. MIME type, size, and category are whitelisted below.
   const user = await getUserWithRole();
   if (!user || user.role !== 'student' || !user.studentId || !user.yearId) {
     return { error: 'Unauthorized' };
@@ -36,7 +40,12 @@ export async function uploadStudentPhoto(formData: FormData) {
 
   const photoCategory = category as keyof typeof PHOTO_LIMITS;
 
-  const supabase = await createClient();
+  // Admin client so the storage upload doesn't collide with `storage.objects`
+  // RLS on the private bucket. The user-session client has no INSERT policy
+  // on that bucket (none were ever written), and managing per-user storage
+  // policies is much fussier than trusting the role check above. Every
+  // field we write is derived from the session, not the form payload.
+  const supabase = await createAdminClient();
 
   // Check count limits
   const { count } = await supabase
@@ -137,6 +146,14 @@ export async function uploadStudentPhoto(formData: FormData) {
   ]);
 
   if (displayUpload.error || thumbUpload.error) {
+    // Log the underlying error so the next failure isn't a mystery.
+    console.error('[uploadStudentPhoto] storage upload failed', {
+      display: displayUpload.error?.message,
+      thumb: thumbUpload.error?.message,
+      bucket: BUCKET_NAME,
+      displayPath,
+      thumbPath,
+    });
     // Best-effort cleanup of whichever variant uploaded
     await supabase.storage.from(BUCKET_NAME).remove([displayPath, thumbPath]);
     return { error: 'Failed to upload file.' };
@@ -161,6 +178,7 @@ export async function uploadStudentPhoto(formData: FormData) {
   });
 
   if (dbError) {
+    console.error('[uploadStudentPhoto] db insert failed:', dbError.message);
     await supabase.storage.from(BUCKET_NAME).remove([displayPath, thumbPath]);
     return { error: 'Failed to save photo record.' };
   }
@@ -175,7 +193,10 @@ export async function deleteStudentPhoto(photoId: string) {
     return { error: 'Unauthorized' };
   }
 
-  const supabase = await createClient();
+  // Same reasoning as the upload action: scope the update to the student's
+  // own record (`.eq('student_id', user.studentId)`) so admin client doesn't
+  // let them nuke someone else's row.
+  const supabase = await createAdminClient();
 
   // Soft delete
   const { error } = await supabase
@@ -184,7 +205,10 @@ export async function deleteStudentPhoto(photoId: string) {
     .eq('id', photoId)
     .eq('student_id', user.studentId);
 
-  if (error) return { error: 'Failed to delete photo.' };
+  if (error) {
+    console.error('[deleteStudentPhoto] update failed:', error.message);
+    return { error: 'Failed to delete photo.' };
+  }
 
   revalidatePath('/student/photos');
   return { success: true };

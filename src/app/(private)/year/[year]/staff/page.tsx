@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getGraduationYearBySlug, getStaffByYear } from '@/lib/queries';
-import { createClient } from '@/lib/supabase/server';
-import { BUCKET_NAME } from '@/lib/storage';
+import { signStoragePath } from '@/lib/storage/signed-url';
 import { PageContainer, SectionHeading } from '@/components/shared/page-shell';
 import { Avatar } from '@/components/ui/avatar';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -18,33 +17,30 @@ export default async function StaffPage({
 
   const staff = await getStaffByYear(yearData.id);
 
-  const supabase = await createClient();
   const staffWithUrls = await Promise.all(
-    staff.map(async (s) => {
-      let url = '';
-      if (s.portrait_thumb_path) {
-        const { data } = await supabase.storage
-          .from(BUCKET_NAME)
-          .createSignedUrl(s.portrait_thumb_path, 3600);
-        url = data?.signedUrl || '';
-      }
-      return { ...s, portraitUrl: url };
-    })
+    staff.map(async (s) => ({
+      ...s,
+      portraitUrl: s.portrait_thumb_path
+        ? ((await signStoragePath(s.portrait_thumb_path)) ?? '')
+        : '',
+    })),
   );
 
   return (
-    <PageContainer className="py-10">
+    <PageContainer className="py-14 sm:py-20">
       <SectionHeading
-        title="Our Staff"
-        subtitle="The people who guided, inspired, and supported us"
+        eyebrow="Faculty"
+        title="Our staff"
+        subtitle="The people who guided, challenged, and stayed late with us."
       />
 
       {staffWithUrls.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 stagger-children">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-10 sm:gap-12 stagger-children">
           {staffWithUrls.map((member) => (
-            <div key={member.id} className="text-center group">
-              <div className="w-32 h-32 mx-auto mb-3 rounded-full overflow-hidden bg-beige border-3 border-soft-border">
+            <article key={member.id} className="text-center group">
+              <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden bg-beige ring-1 ring-soft-border shadow-paper-sm transition-transform duration-500 group-hover:scale-[1.03]">
                 {member.portraitUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- Supabase signed URL
                   <img
                     src={member.portraitUrl}
                     alt={member.full_name}
@@ -52,20 +48,28 @@ export default async function StaffPage({
                     loading="lazy"
                   />
                 ) : (
-                  <Avatar alt={member.full_name} size="xl" className="w-full h-full" />
+                  <Avatar
+                    alt={member.full_name}
+                    size="xl"
+                    className="w-full h-full"
+                  />
                 )}
               </div>
-              <h3 className="font-heading font-semibold text-night">{member.full_name}</h3>
-              <p className="text-sm text-burgundy">{member.role_title}</p>
+              <h3 className="font-heading text-[17px] font-semibold text-night tracking-tight">
+                {member.full_name}
+              </h3>
+              <p className="text-[12px] text-burgundy uppercase tracking-[0.14em] mt-1">
+                {member.role_title}
+              </p>
               {member.department && (
-                <p className="text-xs text-warm-gray mt-0.5">{member.department}</p>
+                <p className="text-xs text-warm-gray mt-1">{member.department}</p>
               )}
               {member.short_message && (
-                <p className="text-xs text-warm-gray mt-2 italic font-accent max-w-[200px] mx-auto">
+                <p className="accent-italic text-[13px] text-night/70 mt-4 max-w-[220px] mx-auto leading-relaxed">
                   &ldquo;{member.short_message}&rdquo;
                 </p>
               )}
-            </div>
+            </article>
           ))}
         </div>
       ) : (

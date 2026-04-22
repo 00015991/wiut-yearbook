@@ -1,6 +1,5 @@
 import { requireRole } from '@/lib/auth';
-import { getStaffByYear } from '@/lib/queries';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { SectionHeading } from '@/components/shared/page-shell';
 import { Card } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/avatar';
@@ -9,10 +8,15 @@ import { StaffForm } from './staff-form';
 import { GraduationCap } from 'lucide-react';
 
 export default async function AdminStaffPage() {
+  // Authorization happens in `requireRole`, and we scope the query to the
+  // admin's assigned year below — so admin-client reads here can't leak other
+  // years. `staff_profiles` has RLS on with no select policies, so the
+  // user-session client returns zero rows for every role. Admin client
+  // sidesteps that until migration 00003 lands.
   const user = await requireRole('admin', 'super_admin');
   if (!user.yearId) return <p>No year assigned.</p>;
 
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
   const { data: staff } = await supabase
     .from('staff_profiles')
     .select('*')

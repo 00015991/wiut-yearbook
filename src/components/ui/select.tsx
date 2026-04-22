@@ -16,7 +16,10 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div className="space-y-1.5">
         {label && (
-          <label htmlFor={inputId} className="block text-sm font-medium text-night">
+          <label
+            htmlFor={inputId}
+            className="block text-[13px] font-medium text-night tracking-tight"
+          >
             {label}
           </label>
         )}
@@ -24,11 +27,11 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           ref={ref}
           id={inputId}
           className={cn(
-            'w-full px-4 py-2.5 rounded-xl border bg-white text-night',
-            'transition-colors duration-200 appearance-none',
-            'focus:outline-none focus:ring-2 focus:ring-burgundy/30 focus:border-burgundy',
-            'bg-[url("data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236B6B6B%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E")] bg-no-repeat bg-[position:right_12px_center] bg-[size:18px]',
-            error ? 'border-error' : 'border-soft-border',
+            'w-full px-3.5 py-2.5 rounded-lg border bg-white text-[15px] text-night',
+            'transition-[border-color,box-shadow] duration-200 appearance-none',
+            'focus:outline-none focus:ring-2 focus:ring-burgundy/25 focus:border-burgundy/80',
+            'bg-[url("data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236A6870%22%20stroke-width%3D%221.5%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E")] bg-no-repeat bg-[position:right_12px_center] bg-[size:18px] pr-10',
+            error ? 'border-error/70' : 'border-soft-border',
             className
           )}
           {...props}
@@ -44,7 +47,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
             </option>
           ))}
         </select>
-        {error && <p className="text-sm text-error">{error}</p>}
+        {error && <p className="text-xs text-error">{error}</p>}
       </div>
     );
   }

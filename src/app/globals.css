@@ -1,24 +1,31 @@
-@import "tailwindcss";
+/* @import rules must come before any rule — Google Fonts first, then Tailwind. */
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400;1,500&display=swap');
+@import "tailwindcss";
 
 :root {
-  /* WIUT Yearbook Design Tokens */
-  --color-beige: #F5F0EB;
-  --color-beige-light: #FAF8F5;
-  --color-beige-dark: #E8DFD5;
-  --color-night: #1A1A2E;
-  --color-night-light: #2D2D44;
-  --color-burgundy: #8B2252;
-  --color-burgundy-light: #A63D6F;
-  --color-burgundy-dark: #6E1A41;
-  --color-gold: #C9A96E;
-  --color-gold-light: #D4BC8E;
-  --color-cream: #FFFDF7;
-  --color-warm-gray: #6B6B6B;
-  --color-soft-border: #E5DDD3;
-  --color-success: #4A7C59;
-  --color-error: #C44536;
-  --color-warning: #D4A03C;
+  /* WIUT Yearbook Design Tokens
+   * Editorial palette — warm cream paper, inked night blue, burgundy accent,
+   * muted gold highlight. All tokens flow through Tailwind v4's @theme block
+   * below so they're addressable as `text-burgundy`, `bg-cream`, etc.
+   */
+  --color-beige: #F1EBE1;
+  --color-beige-light: #FAF7F1;
+  --color-beige-dark: #E3D8C6;
+  --color-night: #1B1B2A;
+  --color-night-light: #30304A;
+  --color-burgundy: #7A1E45;
+  --color-burgundy-light: #A0355F;
+  --color-burgundy-dark: #5C1434;
+  --color-gold: #B08A4A;
+  --color-gold-light: #D4B679;
+  --color-cream: #FBF8F2;
+  --color-warm-gray: #6A6870;
+  --color-warm-gray-light: #8F8B92;
+  --color-soft-border: #E4DCCF;
+  --color-hairline: #EDE5D6;
+  --color-success: #3E7A52;
+  --color-error: #B53A2A;
+  --color-warning: #C89436;
 
   --font-heading: 'Playfair Display', Georgia, serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -26,6 +33,11 @@
 
   --background: var(--color-beige-light);
   --foreground: var(--color-night);
+
+  /* Softened, layered shadows — closer to paper-on-paper than web drop-shadow. */
+  --shadow-paper-sm: 0 1px 2px rgba(27, 27, 42, 0.04), 0 1px 3px rgba(27, 27, 42, 0.06);
+  --shadow-paper-md: 0 2px 6px rgba(27, 27, 42, 0.05), 0 10px 24px -12px rgba(27, 27, 42, 0.10);
+  --shadow-paper-lg: 0 4px 10px rgba(27, 27, 42, 0.06), 0 24px 48px -20px rgba(27, 27, 42, 0.16);
 }
 
 @theme inline {
@@ -43,7 +55,9 @@
   --color-gold-light: var(--color-gold-light);
   --color-cream: var(--color-cream);
   --color-warm-gray: var(--color-warm-gray);
+  --color-warm-gray-light: var(--color-warm-gray-light);
   --color-soft-border: var(--color-soft-border);
+  --color-hairline: var(--color-hairline);
   --color-success: var(--color-success);
   --color-error: var(--color-error);
   --color-warning: var(--color-warning);
@@ -60,33 +74,71 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-body);
+  font-feature-settings: 'ss01', 'cv11';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
+  color: var(--foreground);
+}
+
+/* Editorial display class — use on the largest page headlines. */
+.display-serif {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.02;
+}
+
+/* A small-caps eyebrow label used above section headings. */
+.eyebrow {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-burgundy);
+}
+
+/* Hairline — lighter than soft-border, used on decorative rules. */
+.hairline {
+  border-color: var(--color-hairline);
+}
+
+/* Serif italic pull-quote accent. */
+.accent-italic {
+  font-family: var(--font-accent);
+  font-style: italic;
+  font-weight: 400;
 }
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-beige);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: var(--color-beige-dark);
-  border-radius: 3px;
+  border-radius: 999px;
+  border: 2px solid var(--background);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-warm-gray-light);
 }
 
-/* Focus styles */
+/* Focus styles — restrained ring, respects both dark and light backgrounds. */
 :focus-visible {
   outline: 2px solid var(--color-burgundy);
-  outline-offset: 2px;
-  border-radius: 4px;
+  outline-offset: 3px;
+  border-radius: 6px;
 }
 
 /* Selection */
@@ -100,11 +152,16 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Animation classes */
+/* Utility shadows — reachable as class names. */
+.shadow-paper-sm { box-shadow: var(--shadow-paper-sm); }
+.shadow-paper-md { box-shadow: var(--shadow-paper-md); }
+.shadow-paper-lg { box-shadow: var(--shadow-paper-lg); }
+
+/* Animation keyframes */
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -122,28 +179,55 @@ html {
   50% { opacity: 0.7; }
 }
 
+@keyframes slowZoom {
+  from { transform: scale(1); }
+  to { transform: scale(1.06); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
 .animate-fade-in-up {
-  animation: fadeInUp 0.5s ease-out forwards;
+  animation: fadeInUp 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.4s ease-out forwards;
+  animation: fadeIn 0.5s ease-out forwards;
 }
 
 .animate-pulse-soft {
   animation: pulse-soft 2s ease-in-out infinite;
 }
 
-/* Stagger children animations */
+.animate-slow-zoom {
+  animation: slowZoom 16s ease-out forwards;
+}
+
+/* Stagger children animations — subtler, slightly later start. */
 .stagger-children > * {
   opacity: 0;
-  animation: fadeInUp 0.5s ease-out forwards;
+  animation: fadeInUp 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
 }
-.stagger-children > *:nth-child(1) { animation-delay: 0.05s; }
-.stagger-children > *:nth-child(2) { animation-delay: 0.1s; }
-.stagger-children > *:nth-child(3) { animation-delay: 0.15s; }
-.stagger-children > *:nth-child(4) { animation-delay: 0.2s; }
-.stagger-children > *:nth-child(5) { animation-delay: 0.25s; }
-.stagger-children > *:nth-child(6) { animation-delay: 0.3s; }
-.stagger-children > *:nth-child(7) { animation-delay: 0.35s; }
-.stagger-children > *:nth-child(8) { animation-delay: 0.4s; }
+.stagger-children > *:nth-child(1) { animation-delay: 0.04s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.08s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.12s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.16s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.20s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.24s; }
+.stagger-children > *:nth-child(7) { animation-delay: 0.28s; }
+.stagger-children > *:nth-child(8) { animation-delay: 0.32s; }
+.stagger-children > *:nth-child(9) { animation-delay: 0.36s; }
+.stagger-children > *:nth-child(10) { animation-delay: 0.40s; }
+
+/* Respect user-provided motion preferences. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .stagger-children > * { opacity: 1; }
+}
